@@ -1,0 +1,8 @@
+.DS_Store
+*.py[cod]
+.vimrc
+.venv
+.idea/
+venv/
+backend/project/static/*
+backend/project/__pycache__/*

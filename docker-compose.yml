@@ -1,0 +1,49 @@
+version: '3.7'
+
+services:
+  back-django:
+    build:
+      context: .
+      dockerfile: ./docker/back/Dockerfile
+      # args:
+        # - DJANGO_ENV=${DJANGO_ENV}
+    image: maturetrader/back:prod
+    # environment:
+      # - DJANGO_ENV=${DJANGO_ENV}
+    command: python ./backend/manage.py runserver 0.0.0.0:8000
+    # command: gunicorn website.wsgi:application --bind 0.0.0.0:8000 --workers=2 --threads=4 --worker-class=gthread
+    ports:
+      - "8000:8000"
+    networks:
+      - mature_net
+    volumes:
+      - type: bind
+        source: ./
+        target: /data
+
+  # nginx:
+  #   build:
+  #     context: .
+  #     dockerfile: ./docker/nginx/Dockerfile
+  #     # args:
+  #     #   - USERNAME=${USERNAME}
+  #     #   - GROUPNAME=${GROUPNAME}
+  #     #   - _UID=${UID}
+  #     #   - _GID=${GID}
+  #   image: maturetrader/nginx:prod
+  #   # environment:
+  #   #   - NGINX_PORT=8080
+  #   ports:
+  #     - "80:8080"
+  #   networks:
+  #     - mature_net
+  #   volumes:
+  #     - type: bind
+  #       source: ./
+  #       target: /data
+  #   depends_on:
+  #     - back-django
+
+networks:
+  mature_net:
+    driver: bridge
