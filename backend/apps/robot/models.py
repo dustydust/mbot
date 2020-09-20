@@ -1,7 +1,8 @@
 from django.db import models
+from apps.common.models import BaseUUIDModel
 
 
-class Robot(models.Model):
+class Robot(BaseUUIDModel):
     is_active = models.BooleanField(default=False)
     cryptopair = "BTC-USD"
     strategy = ""
