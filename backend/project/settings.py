@@ -40,7 +40,8 @@ INSTALLED_APPS = [
     'background_task',
     'apps.common',
     'apps.core',
-    'apps.robot'
+    'apps.robot',
+    'apps.exchange'
 ]
 
 MIDDLEWARE = [
