@@ -9,6 +9,7 @@ class ExchangeActionInterface(models.Model):
     class Meta:
         abstract = True
 
+
     def get_balance(self, wallet):
         """
         :argument: (string) (BTC-LTC)
@@ -19,6 +20,7 @@ class ExchangeActionInterface(models.Model):
     def get_open_orders(self):
         pass
 
+    @staticmethod
     def get_ticker(pair):
         """
         :param pair:
@@ -35,14 +37,15 @@ class ExchangeActionInterface(models.Model):
 
 class Exchange(BaseUUIDModel, ExchangeActionInterface):
     name = models.CharField(max_length = 256)
-    exchange_type = ChoiceCharField(ExchangeTypeEnum.get_choices(), default=ExchangeTypeEnum.BITTREX)
+    exchange_type = ChoiceCharField(ExchangeTypeEnum.get_choices(),
+                                    default=ExchangeTypeEnum.BITTREX)
+    apikey = models.CharField(max_length=256)
 
     def __str__(self):
         return ""
 
 
 class ExchangeBittrex(ExchangeActionInterface):
-    APIKEY = models.CharField(max_length = 256)
 
     class Meta:
         abstract = True
@@ -50,3 +53,12 @@ class ExchangeBittrex(ExchangeActionInterface):
     @staticmethod
     def get_ticker(pair):
         return Request.get("https://api.bittrex.com/api/v1.1/public/getticker?market=" + str(pair).upper())
+
+class ExchangePoloniex(ExchangeActionInterface):
+
+    class Meta:
+        abstract = True
+
+    @staticmethod
+    def get_ticker(pair):
+        pass
