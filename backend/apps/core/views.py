@@ -60,4 +60,8 @@ def makereq(request):
     return HttpResponse("R")
 
 
+def runtask(request):
+    # Here we select a strategy to fire
+    return HttpResponse("R")
+
 

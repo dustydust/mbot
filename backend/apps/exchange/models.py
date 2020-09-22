@@ -36,7 +36,7 @@ class ExchangeActionInterface(models.Model):
 
 
 class Exchange(BaseUUIDModel, ExchangeActionInterface):
-    name = models.CharField(max_length=256)
+    name = models.CharField(max_length=256, default="robo")
     exchange_type = ChoiceCharField(ExchangeTypeEnum.get_choices(),
                                     default=ExchangeTypeEnum.BITTREX)
     apikey = models.CharField(max_length=256)
