@@ -41,7 +41,8 @@ INSTALLED_APPS = [
     'apps.common',
     'apps.core',
     'apps.robot',
-    'apps.exchange'
+    'apps.exchange',
+    'apps.strategy'
 ]
 
 MIDDLEWARE = [
