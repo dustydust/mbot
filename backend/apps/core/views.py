@@ -3,9 +3,7 @@ from django.http import HttpResponse
 from background_task import background
 from background_task.models import *
 from apps.exchange.models import ExchangeBittrex
-
-
-from django.db import models
+from apps.strategy.models import Strategy
 
 obj_a = {
     'cnt' : 0
@@ -59,9 +57,21 @@ def makereq(request):
     print("makereq")
     return HttpResponse("R")
 
+#########
 
-def runtask(request):
+@background(schedule=1)
+def process_strategy():
+    # r = ExchangeBittrex.get_ticker("btc-ltc")
+    # print(r.json())
+    strategy_id = "my first strategy"
+    strategy_record = Strategy.objects.get(name=strategy_id)
+    strategy = strategy_record.get_strategy()
+    strategy.go()
+
+
+def run_task(request):
     # Here we select a strategy to fire
-    return HttpResponse("R")
+    process_strategy(schedule=2, repeat=5)  # Here we can override schedule and repeat
+    return HttpResponse("Runtask")
 
 

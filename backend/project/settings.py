@@ -130,3 +130,5 @@ STATIC_ROOT = os.path.join(PROJECT_ROOT, 'static')
 # Mbot Constants
 
 STRATEGY_ENTRY_FILE = 'entry.py'
+STRATEGY_ENTRY_MODULE = 'entry'
+STRATEGY_MAP_CLASSNAME = 'StrategyMap'

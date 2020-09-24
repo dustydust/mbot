@@ -42,7 +42,7 @@ class Exchange(BaseUUIDModel, ExchangeActionInterface):
     apikey = models.CharField(max_length=256)
 
     def __str__(self):
-        return ""
+        return f"{self.name}"
 
 
 class ExchangeBittrex(ExchangeActionInterface):
@@ -53,6 +53,7 @@ class ExchangeBittrex(ExchangeActionInterface):
     @staticmethod
     def get_ticker(pair):
         return Request.get("https://api.bittrex.com/api/v1.1/public/getticker?market=" + str(pair).upper())
+
 
 class ExchangePoloniex(ExchangeActionInterface):
 

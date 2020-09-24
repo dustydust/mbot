@@ -7,7 +7,8 @@ urlpatterns = [
     path('', views.index),
     path('createtask', views.createtask),
     path('deletetasks', views.deletetasks),
-    path('makereq', views.makereq)
+    path('makereq', views.makereq),
+    path('runtask', views.run_task)
 ]
 
 ##
