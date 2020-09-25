@@ -1,3 +1,5 @@
+from apps.exchange.models import ExchangeBittrex
+
 class StrategyMap:
     def __init__(self, context=None):
         self.context = context
@@ -8,5 +10,7 @@ class StrategyMap:
 
     def go(self):
         self.action_a()
-        print("I'm the go method!")
+        r = ExchangeBittrex.get_ticker("btc-ltc")
+        print(r.json())
+        # print("I'm the go method!")
 
