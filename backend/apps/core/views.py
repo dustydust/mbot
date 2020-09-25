@@ -59,6 +59,7 @@ def makereq(request):
 
 #########
 
+
 @background(schedule=1)
 def process_strategy():
     # r = ExchangeBittrex.get_ticker("btc-ltc")
