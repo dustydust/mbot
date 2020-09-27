@@ -16,5 +16,5 @@ class Strategy(BaseUUIDModel):
         strategy_object = get_strategy_entity(self.directory)
         return strategy_object
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.name}"
