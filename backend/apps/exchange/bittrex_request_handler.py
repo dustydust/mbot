@@ -9,3 +9,4 @@ class BittrexRequestHandler:
 
     @staticmethod
     def handle_response(url):
+        return Request.get(url)
