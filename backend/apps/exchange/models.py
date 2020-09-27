@@ -5,6 +5,12 @@ from apps.exchange.enums import ExchangeTypeEnum
 from apps.common.requests import Request
 from decimal import *
 
+BITTREX_BASE = "https://api.bittrex.com/v3/"
+ORDER_DIRECTION_CHOICES = [
+    ('BUY', 'Buy'),
+    ('SELL', 'Sell'),
+]
+
 
 class Order(BaseUUIDModel):
     uuid_outer = models.CharField(max_length=256, default="")
@@ -13,6 +19,7 @@ class Order(BaseUUIDModel):
     testing = models.BooleanField(default=True)
     quantity = models.DecimalField(max_digits=18, decimal_places=11)
     price = models.DecimalField(max_digits=18, decimal_places=11)
+    direction = ChoiceCharField(choices=ORDER_DIRECTION_CHOICES, blank=False)
 
     def __str__(self):
         return f"{self.uuid}"
@@ -60,45 +67,71 @@ class Exchange(BaseUUIDModel, ExchangeActionInterface):
 
 class ExchangeBittrex(Exchange, ExchangeActionInterface):
 
+    # https://bittrex.github.io/api/v3#topic-Authentication
+    # Implement Headers
+
     class Meta:
         abstract = True
 
     @staticmethod
-    def get_ticker(pair) -> dict:
-        return Request.get("https://api.bittrex.com/api/v1.1/public/getticker?market=" + str(pair).upper())
+    def get_ticker(pair):
+        response = Request.get(f"{BITTREX_BASE}markets/{str(pair).upper()}/ticker")
+        if response.get("code"):
+            return print("ERROR: ", response.get("code"))
+        return response
 
-    def buy_limit(self, market: str = "", quantity: Decimal = 0.0, rate: Decimal = 0.0) -> dict:
+    def buy_limit(self, market: str = "", quantity: Decimal = 0.0, price: Decimal = 0.0):
         if self.testing:
             return {
                 "exchange_type": self.exchange_type,
                 "quantity": quantity,
-                "price": rate,
+                "price": price,
             }
 
-        return Request.get(
-            f"https://api.bittrex.com/api/v1.1/market/buylimit?"
-            f"apikey={self.apikey}&market={market}&quantity={quantity}&rate={rate}"
-        )
+        payload = {
+            "marketSymbol": "value",
+            "direction": "BUY",
+            "type:": "LIMIT",
+            "timeInForce": "GOOD_TIL_CANCELLED",
+            "quantity": quantity,
+            "limit": price
+        }
 
-    def sell_limit(self, market: str = "", quantity: Decimal = 0.0, rate: Decimal = 0.0) -> dict:
+        response = Request.post(f"{BITTREX_BASE}/orders", data=payload)
+
+        if response.get("code"):
+            return print("ERROR: ", response.get("code"))
+        return response
+
+    def sell_limit(self, market: str = "", quantity: Decimal = 0.0, price: Decimal = 0.0):
         if self.testing:
             return {
                 "exchange_type": self.exchange_type,
                 "quantity": quantity,
-                "price": rate,
+                "price": price,
             }
 
-        return Request.get(
-            f"https://api.bittrex.com/api/v1.1/market/selllimit?"
-            f"apikey={self.apikey}&market={market}&quantity={quantity}&rate={rate}"
-        )
+        payload = {
+            "marketSymbol": "value",
+            "direction": "SELL",
+            "type:": "LIMIT",
+            "timeInForce": "GOOD_TIL_CANCELLED",
+            "quantity": quantity,
+            "limit": price
+        }
 
-    def get_open_orders(self, market: str = "") -> dict:
+        response = Request.post(f"{BITTREX_BASE}/orders", data=payload)
+
+        if response.get("code"):
+            return print("ERROR: ", response.get("code"))
+        return response
+
+    def get_open_orders(self, marketsymbol: str = ""):
         # Return local exchange orders and remote
-        return Request.get(
-            f"https://api.bittrex.com/api/v1.1/market/getopenorders?"
-            f"apikey={self.apikey}&market={market}"
-        )
+        response = Request.get(f"{BITTREX_BASE}orders/open")
+        if response.get("code"):
+            return print("ERROR: ", response.get("code"))
+        return response
 
 
 class ExchangePoloniex(ExchangeActionInterface):
