@@ -2,7 +2,7 @@ from django.shortcuts import render
 from django.http import HttpResponse
 from background_task import background
 from background_task.models import *
-from apps.exchange.models import ExchangeBittrex
+from apps.exchange.models import Bittrex
 from apps.strategy.models import Strategy
 
 obj_a = {
@@ -48,7 +48,7 @@ def deletetasks(request):
 
 @background(schedule=1)
 def repeat_ticker():
-    r = ExchangeBittrex.get_ticker("btc-ltc")
+    r = Bittrex.get_ticker("btc-ltc")
     print(r.json())
 
 
@@ -61,10 +61,7 @@ def makereq(request):
 
 
 @background(schedule=1)
-def process_strategy():
-    # r = ExchangeBittrex.get_ticker("btc-ltc")
-    # print(r.json())
-    strategy_id = "my first strategy"
+def process_strategy(strategy_id: str = ""):
     strategy_record = Strategy.objects.get(name=strategy_id)
     strategy = strategy_record.get_strategy()
     strategy.go()
@@ -72,7 +69,8 @@ def process_strategy():
 
 def run_task(request):
     # Here we select a strategy to fire
-    process_strategy(schedule=2, repeat=5)  # Here we can override schedule and repeat
+    strategy_id = "my first strategy"
+    process_strategy(strategy_id, schedule=1, repeat=5)  # Here we can override schedule and repeat
     return HttpResponse("Runtask")
 
 

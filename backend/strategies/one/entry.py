@@ -1,4 +1,6 @@
-from apps.exchange.models import ExchangeBittrex
+from apps.exchange.models import Exchange
+from apps.exchange.models import Order
+
 
 class StrategyMap:
     def __init__(self, context=None):
@@ -9,8 +11,10 @@ class StrategyMap:
         return True
 
     def go(self):
-        self.action_a()
-        r = ExchangeBittrex.get_ticker("btc-ltc")
-        print(r.json())
+        # self.action_a()
+        exch = Exchange.objects.get(name="btrx1")
+        print(exch.get_ticker("ltc-btc"))
+        print(exch.apikey)
+        print(exch.testing)
         # print("I'm the go method!")
 
