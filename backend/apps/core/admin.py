@@ -6,15 +6,15 @@ from apps.strategy.models import Strategy
 
 
 class RobotAdmin(admin.ModelAdmin):
-    pass
+    list_display = [field.name for field in Robot._meta.get_fields()]
 
 
 class ExchangeAdmin(admin.ModelAdmin):
-    pass
+    list_display = [field.name for field in Exchange._meta.get_fields()]
 
 
 class OrderAdmin(admin.ModelAdmin):
-    pass
+    list_display = [field.name for field in Order._meta.get_fields()]
 
 
 class StrategyAdmin(admin.ModelAdmin):

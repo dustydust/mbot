@@ -1,4 +1,3 @@
-from django.shortcuts import render
 from django.http import HttpResponse
 from background_task import background
 from background_task.models import *
@@ -64,12 +63,12 @@ def makereq(request):
 def process_strategy(strategy_id: str = ""):
     strategy_record = Strategy.objects.get(name=strategy_id)
     strategy = strategy_record.get_strategy()
-    strategy.go()
+    strategy.go(strategy_record)
 
 
 def run_task(request):
     # Here we select a strategy to fire
-    strategy_id = "my first strategy"
+    strategy_id = "first_strat"
     process_strategy(strategy_id, schedule=1, repeat=5)  # Here we can override schedule and repeat
     return HttpResponse("Runtask")
 

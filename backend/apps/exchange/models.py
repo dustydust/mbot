@@ -2,16 +2,13 @@ from django.db import models
 from apps.common.models import BaseUUIDModel
 from apps.common.model_fields import ChoiceCharField
 from apps.exchange.enums import ExchangeTypeEnum
+from apps.exchange.enums import OrderDirectionEnum
+from apps.exchange.enums import OrderStatusEnum
 from apps.common.requests import Request
 from apps.strategy.models import Strategy
 from decimal import *
 
 BITTREX_BASE = "https://api.bittrex.com/v3/"
-ORDER_DIRECTION_CHOICES = [
-    ('BUY', 'Buy'),
-    ('SELL', 'Sell'),
-    ('DEBUG', 'Debug')
-]
 
 
 class Order(BaseUUIDModel):
@@ -20,9 +17,14 @@ class Order(BaseUUIDModel):
                                     default=ExchangeTypeEnum.BITTREX)
     testing = models.BooleanField(default=True)
     quantity = models.DecimalField(max_digits=18, decimal_places=11, blank=True, null=True)
-    price = models.DecimalField(max_digits=18, decimal_places=11, blank=True, null=True)
-    direction = ChoiceCharField(choices=ORDER_DIRECTION_CHOICES, blank=False, default="DEBUG")
+    price_open = models.DecimalField(max_digits=18, decimal_places=11, default=0.0)
+    price_close = models.DecimalField(max_digits=18, decimal_places=11, default=0.0)
+    direction = ChoiceCharField(choices=OrderDirectionEnum.get_choices(),
+                                default=OrderDirectionEnum.BUY)
     strategy = models.ForeignKey(Strategy, on_delete=models.DO_NOTHING, blank=True, null=True)
+    pair = models.CharField(max_length=256, default="")
+    status = ChoiceCharField(choices=OrderStatusEnum.get_choices(),
+                             default=OrderStatusEnum.OPENED)
 
     def __str__(self):
         return f"{self.uuid}"
@@ -88,7 +90,7 @@ class Bittrex(ExchangeInterface):
             }
 
         payload = {
-            "marketSymbol": "value",
+            "marketSymbol": market,
             "direction": "BUY",
             "type:": "LIMIT",
             "timeInForce": "GOOD_TIL_CANCELLED",
@@ -111,7 +113,7 @@ class Bittrex(ExchangeInterface):
             }
 
         payload = {
-            "marketSymbol": "value",
+            "marketSymbol": market,
             "direction": "SELL",
             "type:": "LIMIT",
             "timeInForce": "GOOD_TIL_CANCELLED",
