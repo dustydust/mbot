@@ -3,10 +3,12 @@ from apps.common.requests import Request
 
 class BittrexRequestHandler:
 
-    @staticmethod
-    def send_request(url):
-        return Request.get(url)
+    base = "https://api.bittrex.com/v3/"
 
     @staticmethod
-    def handle_response(url):
+    def _send_request(url):
+        return Request.get(self.base + url)
+
+    @staticmethod
+    def _handle_response(url):
         return Request.get(url)

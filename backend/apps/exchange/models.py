@@ -2,8 +2,13 @@ from django.db import models
 from apps.common.models import BaseUUIDModel
 from apps.common.model_fields import ChoiceCharField
 from apps.exchange.enums import ExchangeTypeEnum
+from apps.exchange.enums import OrderDirectionEnum
+from apps.exchange.enums import OrderStatusEnum
 from apps.common.requests import Request
+from apps.strategy.models import Strategy
 from decimal import *
+
+BITTREX_BASE = "https://api.bittrex.com/v3/"
 
 
 class Order(BaseUUIDModel):
@@ -11,14 +16,27 @@ class Order(BaseUUIDModel):
     exchange_type = ChoiceCharField(choices=ExchangeTypeEnum.get_choices(),
                                     default=ExchangeTypeEnum.BITTREX)
     testing = models.BooleanField(default=True)
-    quantity = models.DecimalField(max_digits=18, decimal_places=11)
-    price = models.DecimalField(max_digits=18, decimal_places=11)
+    quantity = models.DecimalField(max_digits=18, decimal_places=11, blank=True, null=True)
+    price_open = models.DecimalField(max_digits=18, decimal_places=11, default=0.0)
+    price_close = models.DecimalField(max_digits=18, decimal_places=11, default=0.0)
+    direction = ChoiceCharField(choices=OrderDirectionEnum.get_choices(),
+                                default=OrderDirectionEnum.BUY)
+    strategy = models.ForeignKey(Strategy, on_delete=models.DO_NOTHING, blank=True, null=True)
+    pair = models.CharField(max_length=256, default="")
+    status = ChoiceCharField(choices=OrderStatusEnum.get_choices(),
+                             default=OrderStatusEnum.OPENED)
 
     def __str__(self):
         return f"{self.uuid}"
 
 
-class ExchangeActionInterface(models.Model):
+class ExchangeInterface(models.Model):
+    name = models.CharField(max_length=256, default="robo")
+    exchange_type = ChoiceCharField(choices=ExchangeTypeEnum.get_choices(),
+                                    default=ExchangeTypeEnum.BITTREX)
+    apikey = models.CharField(max_length=256, default="")
+    testing = models.BooleanField(default=True)
+
     class Meta:
         abstract = True
 
@@ -47,61 +65,83 @@ class ExchangeActionInterface(models.Model):
         pass
 
 
-class Exchange(BaseUUIDModel, ExchangeActionInterface):
-    name = models.CharField(max_length=256, default="robo")
-    exchange_type = ChoiceCharField(ExchangeTypeEnum.get_choices(),
-                                    default=ExchangeTypeEnum.BITTREX)
-    apikey = models.CharField(max_length=256)
-    testing = models.BooleanField(default=True)
+class Bittrex(ExchangeInterface):
 
-    def __str__(self):
-        return f"{self.name}"
-
-
-class ExchangeBittrex(Exchange, ExchangeActionInterface):
+    # https://bittrex.github.io/api/v3#topic-Authentication
+    # Implement Headers
 
     class Meta:
         abstract = True
 
     @staticmethod
-    def get_ticker(pair) -> dict:
-        return Request.get("https://api.bittrex.com/api/v1.1/public/getticker?market=" + str(pair).upper())
+    def get_ticker(pair):
+        print(f"Requesting {BITTREX_BASE}markets/{str(pair).upper()}/ticker")
+        response = Request.get(f"{BITTREX_BASE}markets/{str(pair).upper()}/ticker").json()
+        if response.get("code"):
+            return print("ERROR: ", response.get("code"))
+        return response
 
-    def buy_limit(self, market: str = "", quantity: Decimal = 0.0, rate: Decimal = 0.0) -> dict:
+    def buy_limit(self, market: str = "", quantity: Decimal = 0.0, price: Decimal = 0.0):
         if self.testing:
             return {
                 "exchange_type": self.exchange_type,
                 "quantity": quantity,
-                "price": rate,
+                "price": price,
             }
 
-        return Request.get(
-            f"https://api.bittrex.com/api/v1.1/market/buylimit?"
-            f"apikey={self.apikey}&market={market}&quantity={quantity}&rate={rate}"
-        )
+        payload = {
+            "marketSymbol": market,
+            "direction": "BUY",
+            "type:": "LIMIT",
+            "timeInForce": "GOOD_TIL_CANCELLED",
+            "quantity": quantity,
+            "limit": price
+        }
 
-    def sell_limit(self, market: str = "", quantity: Decimal = 0.0, rate: Decimal = 0.0) -> dict:
+        response = Request.post(f"{BITTREX_BASE}/orders", data=payload).json()
+
+        if response.get("code"):
+            return print("ERROR: ", response.get("code"))
+        return response
+
+    def sell_limit(self, market: str = "", quantity: Decimal = 0.0, price: Decimal = 0.0):
         if self.testing:
             return {
                 "exchange_type": self.exchange_type,
                 "quantity": quantity,
-                "price": rate,
+                "price": price,
             }
 
-        return Request.get(
-            f"https://api.bittrex.com/api/v1.1/market/selllimit?"
-            f"apikey={self.apikey}&market={market}&quantity={quantity}&rate={rate}"
-        )
+        payload = {
+            "marketSymbol": market,
+            "direction": "SELL",
+            "type:": "LIMIT",
+            "timeInForce": "GOOD_TIL_CANCELLED",
+            "quantity": quantity,
+            "limit": price
+        }
 
-    def get_open_orders(self, market: str = "") -> dict:
+        response = Request.post(f"{BITTREX_BASE}/orders", data=payload).json()
+
+        if response.get("code"):
+            return print("ERROR: ", response.get("code"))
+        return response
+
+    def get_open_orders(self, marketsymbol: str = ""):
         # Return local exchange orders and remote
-        return Request.get(
-            f"https://api.bittrex.com/api/v1.1/market/getopenorders?"
-            f"apikey={self.apikey}&market={market}"
-        )
+        response = Request.get(f"{BITTREX_BASE}orders/open")
+        if response.get("code"):
+            return print("ERROR: ", response.get("code"))
+        return response
 
 
-class ExchangePoloniex(ExchangeActionInterface):
+class Exchange(BaseUUIDModel, Bittrex):
+
+    def __str__(self):
+        return f"{self.name}"
+
+
+class ExchangePoloniex(ExchangeInterface):
 
     class Meta:
         abstract = True
