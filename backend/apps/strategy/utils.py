@@ -1,5 +1,6 @@
 import os
 import importlib
+from django.db import models
 from django.conf import settings
 
 
@@ -26,9 +27,9 @@ def get_strategy_module_path(file_path: str) -> str:
     return file_path + settings.STRATEGY_ENTRY_MODULE
 
 
-def get_strategy_entity(module_path: str):
+def get_strategy_entity(module_path: str, context: models.Model):
     module_path = get_strategy_module_path(module_path)
     strategy_module = importlib.import_module(module_path)
     StrategyMap = getattr(strategy_module, settings.STRATEGY_MAP_CLASSNAME)
-    strategy_object = StrategyMap()
+    strategy_object = StrategyMap(context)
     return strategy_object

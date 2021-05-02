@@ -42,7 +42,7 @@ INSTALLED_APPS = [
     'apps.core',
     'apps.robot',
     'apps.exchange',
-    'apps.strategy'
+    'apps.strategy',
 ]
 
 MIDDLEWARE = [

@@ -1,17 +1,26 @@
 from apps.exchange.models import Exchange
 from apps.exchange.models import Order
-from django.db import models
+from apps.strategy.models import StrategyInterface
 from decimal import *
 
 getcontext().prec = 8
 
-class StrategyMap:
+"""
+    What is StrategyMap
+    It is a class that implements number of instructions for
+    robot with ability to save state and pass it throught iterations
+    All inner state variables should be declared in __init__ with context.
+    Context passes from view.
+    load_strategy_state() and save_strategy_state() 
+    must be called to save it state
+"""
+
+class StrategyMap(StrategyInterface):
     def __init__(self, context=None):
         self.context = context
-
-    def action_a(self):
-        print("I'm the action of first strategy!")
-        return True
+        self.iteration = 0
+        self.some_string = "string"
+        self.load_strategy_state()
 
     @staticmethod
     def _process_tiker(bittrex_ticker: dict) -> dict:
@@ -22,8 +31,10 @@ class StrategyMap:
 
         return ticker
 
-    def go(self, context: models.Model):
-        self.context = context
+    def go(self):
+        self.iteration += 1
+        self.some_string = "yo!"
+
         pair = 'LTC-BTC'
         exch = Exchange.objects.get(name="btrx1")
 
@@ -61,11 +72,7 @@ class StrategyMap:
             # exch.buy_limit()
         else:
             print("Waiting for closing orders...")
+        print(f"Iteration is : {self.iteration}")
 
-        # self.action_a()
-        # print()
-        # print(exch.exchange_type)
-        # print(self.context.name)
-
-        # print("I'm the go method!")
+        return self.save_strategy_state()
 

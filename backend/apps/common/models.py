@@ -20,6 +20,7 @@ class BaseModelMixin(models.Model):
 
     class Meta:
         abstract = True
+        # app_label = 'base'  # <-- this label was wrong before.
 
     def _get_orig(self):
         created = True if not self.pk else False

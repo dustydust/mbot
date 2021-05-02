@@ -10,6 +10,9 @@ from decimal import *
 
 BITTREX_BASE = "https://api.bittrex.com/v3/"
 
+# > datetime.fromisoformat('2018-12-11T00:56:00')
+# datetime.datetime(2018, 12, 11, 0, 56)
+
 
 class Order(BaseUUIDModel):
     uuid_outer = models.CharField(max_length=256, default="")
@@ -30,12 +33,30 @@ class Order(BaseUUIDModel):
         return f"{self.uuid}"
 
 
+class PairHistory(models.Model):
+    pair = models.CharField(max_length=256, default="")
+    exchange_type = ChoiceCharField(choices=ExchangeTypeEnum.get_choices(),
+                                    default=ExchangeTypeEnum.BITTREX)
+    starts_at = models.DateTimeField() # "2018-12-11T00:56:00Z"
+    open = models.DecimalField(max_digits=18, decimal_places=11, default=0.0) # "0.00471835"
+    high = models.DecimalField(max_digits=18, decimal_places=11, default=0.0) # "0.00471835"
+    low = models.DecimalField(max_digits=18, decimal_places=11, default=0.0) # "0.00471835"
+    close = models.DecimalField(max_digits=18, decimal_places=11, default=0.0) # "0.00471835"
+    volume = models.DecimalField(max_digits=18, decimal_places=11, default=0.0) # "1.07286662"
+    quote_volume = models.DecimalField(max_digits=18, decimal_places=11, default=0.0) # "0.00754226"
+
+    def __repr__(self):
+        return f"{pair} - {starts_at} - {self.pk}"
+
+
 class ExchangeInterface(models.Model):
     name = models.CharField(max_length=256, default="robo")
     exchange_type = ChoiceCharField(choices=ExchangeTypeEnum.get_choices(),
                                     default=ExchangeTypeEnum.BITTREX)
     apikey = models.CharField(max_length=256, default="")
     testing = models.BooleanField(default=True)
+
+    ###
 
     class Meta:
         abstract = True
@@ -136,6 +157,9 @@ class Bittrex(ExchangeInterface):
 
 
 class Exchange(BaseUUIDModel, Bittrex):
+
+    class Meta:
+        app_label = "exchange"
 
     def __str__(self):
         return f"{self.name}"
